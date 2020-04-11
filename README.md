@@ -14,8 +14,13 @@ usage
 --------------------
 execute test_ms5607.py
 
-required imports
-import machine
-from machine import I2C
+required imports:
+
+Import machine
+
+From machine import I2C
+
 import time
+
+
 
