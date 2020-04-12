@@ -14,7 +14,9 @@ version
 revision
 --------------------
 Added a coeficient prom crc test function
+
 Added a function to obtain temperature & pressure
+
 Added a function for quick test
 
 usage
@@ -24,5 +26,7 @@ execute test_ms5607.py
 Required imports:
 --------------------
 Import machine
+
 From machine import I2C
+
 import time
