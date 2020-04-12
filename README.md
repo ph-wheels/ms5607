@@ -3,6 +3,9 @@ MS5607.py
 A micro python port of the MS5607 wrapper found here:
 which has been tested on ESP32
 
+Main source for device specific infomation can be found on
+https://www.te.com -> AN520
+
 https://github.com/rsolomon/py-MS5607
 which is based on
 https://github.com/cypherkey/RaspberryPi.Net
