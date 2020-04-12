@@ -25,9 +25,9 @@ Added a function to obtain temperature & pressure
 
 Added a function for quick test
 
-usage
+usage examples in
 --------------------
-execute test_ms5607.py
+test_ms5607.py
 
 Required imports:
 --------------------
