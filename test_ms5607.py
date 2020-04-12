@@ -10,6 +10,7 @@ i2c = machine.I2C(sda=machine.Pin(23),scl=machine.Pin(22)) # pin usage may vary 
 address = 0x77 # or 0x76 based on alternative address pin
 samples = 64
 ms = MS5607(i2c,address) # has optional 3th parameter True for debug mode
+print ('Device coeficient valid -> %s' % ms.get_check_prom())
 alt = ms.get_altitude(samples)
 print ('Heigth above MSL ->  %6.2f Mtr' % float(alt/1000))
 hpa = ms.get_pressure(samples)
