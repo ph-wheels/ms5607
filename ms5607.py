@@ -8,8 +8,8 @@ class MS5607:
     
     Get the latest at:
     below reference wher used to build a class which could 
-	in micro pyhon, enjoy and with thanks to original contributors
-	
+    in micro pyhon, enjoy and with thanks to original contributors
+    
     ported from https://github.com/rsolomon/py-MS5607
 
     Ported from http://code.google.com/p/ardroneme/
@@ -61,6 +61,39 @@ class MS5607:
             print('PROM values -> [%s]' % ', '.join(map(str, coefficients)))
         return coefficients
 
+    def __prom_valid(self, n_prom):
+        # will use prom data array to validate prom content
+        n_rem = 0x00
+        crc_read = n_prom[7]
+        if self._dbg:
+            print ('CRC_0 - %x' % crc_read)
+        n_prom[7]=(0xFF00 & (n_prom[7]))
+        for cnt in range (16):
+            if (cnt & 0x01) == 1:
+                n_rem = n_rem ^ n_prom[cnt >> 1] & 0x00ff
+                if self._dbg:
+                    print ('CRC_1 - %x' % n_rem)
+            else:
+                n_rem = n_rem ^ n_prom[cnt >> 1] >> 8
+                if self._dbg:
+                    print ('CRC_2 - %x' % n_rem)
+            for x in range (7, -1, -1):
+                if n_rem & 0x8000 != 0:
+                    n_rem = (n_rem << 1) ^ 0x3000
+                    if self._dbg:
+                        print ('CRC_3 - %x' % n_rem)
+                else:
+                    n_rem = n_rem << 1
+                    if self._dbg:
+                        print ('CRC_4 - %x' % n_rem)
+        n_rem = (0x000F & (n_rem >> 12))
+        if self._dbg:
+            print ('CRC_5 -> %x' % n_rem)
+        if crc_read & 0x000f == n_rem:
+            return True
+        else:
+            return False
+    
     def __read_adc(self, cmd):
         arr = bytearray(1)
         read_bytes = bytearray(3)
@@ -74,7 +107,7 @@ class MS5607:
         delay_time[MS5607._CMD_ADC_512] = 0.003
         delay_time[MS5607._CMD_ADC_1024] = 0.004
         delay_time[MS5607._CMD_ADC_2048] = 0.006
-        delay_time[MS5607._CMD_ADC_4096] = 0.01
+        delay_time[MS5607._CMD_ADC_4096] = 0.010
 
         time.sleep(delay_time[cmd & 0x0f])       # Wait necessary conversion time
 
@@ -166,7 +199,33 @@ class MS5607:
         z1 = lookup_table[inx]
         z2 = lookup_table[inx + 1]
         return (z1 + ((int(pa1 - pressure_pa) * (z2 - z1)) >> 10))
-        
+
+    def get_check_prom(self):
+        n_prom = [0] * 8
+        for n in range(0, 8):
+            n_prom[n] = self.__read_coefficient(n)
+        return self.__prom_valid(n_prom)
+
+    def get_test(self, samples=2):
+        accum = 0
+        for n in range(0, samples):
+            time.sleep(0.001)
+            D2 = self.__read_adc(MS5607._CMD_ADC_D2 | MS5607._CMD_ADC_4096)
+            if self._dbg:
+                print ('D2 -> %d' % D2)
+            time.sleep(0.001)
+            D1 = self.__read_adc(MS5607._CMD_ADC_D1 | MS5607._CMD_ADC_4096)
+            if self._dbg:
+                print ('D1 -> %d' % D1)
+            dT=D2 - self._coefficients[4] * 2**8
+            OFF=self._coefficients[1] * 2**17 + dT * self._coefficients[3] / 2**6
+            SENS=self._coefficients[0] * 2**16 + dT * self._coefficients[2] / 2**7
+            T=(2000 + (dT * self._coefficients[5]) / 2**23) / 100
+            P=(((D1 * SENS) / 2**21) - OFF) / 2**15 / 100
+            print ('T -> %d' % T)
+            print ('P -> %d' % P)
+        return
+    
     def get_altitude(self, samples=48):
         accum = 0
         for n in range(0, samples):
